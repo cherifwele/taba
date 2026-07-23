@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=2600, initial-scale=1" />
+<title>The verse-locus workbench</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 2600px; height: 1350px; background: #f4f7fb; }
+  body { font-family: "Lato", "DejaVu Sans", Arial, sans-serif; color: #17243b; }
+  .figure { width: 2600px; height: 1350px; background: #fff; overflow: hidden; }
+  .hero {
+    height: 135px;
+    background:
+      linear-gradient(rgba(6, 53, 100, .96), rgba(6, 53, 100, .96)),
+      repeating-linear-gradient(60deg, transparent 0 34px, rgba(255,255,255,.08) 35px 36px),
+      repeating-linear-gradient(-60deg, transparent 0 34px, rgba(255,255,255,.08) 35px 36px);
+    color: #fff;
+    text-align: center;
+    padding-top: 14px;
+  }
+  .hero h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 58px; line-height: 1.05; font-weight: 700; }
+  .hero p { margin: 12px 0 0; font-size: 22px; letter-spacing: 4px; text-transform: uppercase; }
+  .toolbar {
+    height: 78px; display: grid; grid-template-columns: 1.1fr 2fr 1.1fr; align-items: center;
+    padding: 0 28px; background: #211007; color: #fff; font-size: 22px;
+  }
+  .toolbar .left { letter-spacing: .5px; }
+  .selector { justify-self: center; display: flex; align-items: center; gap: 18px; }
+  .selector .tag { color: #ffd400; font-size: 23px; }
+  .selector .box { background: linear-gradient(#541800,#2f0b00); border: 1px solid #66250f; border-radius: 8px; padding: 12px 28px; min-width: 650px; text-align: center; }
+  .toolbar .right { justify-self: end; letter-spacing: .6px; }
+  .cards { height: 735px; display: grid; grid-template-columns: 1.03fr 1.03fr 1.06fr 1.06fr 1.03fr; gap: 20px; padding: 20px 20px 0; }
+  .card { border: 2px solid #a8c1d8; background: #fff; min-width: 0; display: flex; flex-direction: column; }
+  .card-head { min-height: 112px; background: linear-gradient(#4f8dbb,#2e6f9f); color: #fff; text-align: center; padding: 10px 12px 11px; }
+  .card-head .title { font-size: 26px; line-height: 1.15; font-weight: 500; }
+  .card-head .sub { margin-top: 7px; font-size: 20px; line-height: 1.25; }
+  .card-head .sub em { font-style: italic; }
+  .card-body { flex: 1; padding: 24px 18px 18px; position: relative; display: flex; flex-direction: column; align-items: center; }
+  .qref { align-self: flex-start; color: #1734bf; font-weight: 700; font-size: 25px; margin-bottom: 24px; }
+  .arabic { font-family: "Noto Sans Arabic", "Amiri", "Scheherazade New", serif; direction: rtl; unicode-bidi: isolate; }
+  .quran { font-size: 48px; line-height: 1.8; white-space: nowrap; margin-top: 18px; }
+  .hilite { background: #ffe36e; padding: 0 8px 4px; border-radius: 4px; }
+  .translation { font-size: 24px; line-height: 1.45; text-align: center; margin: 28px 8px 0; }
+  .arabic-key { font-size: 54px; line-height: 1.2; margin: 12px 0 5px; }
+  .arabic-gloss { font-size: 45px; line-height: 1.4; color: #d31818; margin: 5px 0 18px; }
+  .translit { font-family: Georgia, "Times New Roman", serif; font-size: 25px; font-style: italic; text-align: center; margin-top: 2px; }
+  .kanembu { color: #1c6a1c; font-size: 24px; line-height: 1.55; text-align: center; font-style: italic; margin-top: 18px; }
+  .wolof { color: #4b1589; font-size: 34px; font-style: italic; margin-top: 28px; }
+  .placeholder { font-size: 27px; line-height: 1.5; font-style: italic; text-align: center; margin-top: 54px; }
+  .badges { width: 100%; margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  .badge { color: white; border-radius: 7px; padding: 9px 15px; font-size: 20px; line-height: 1.2; box-shadow: inset 0 1px rgba(255,255,255,.3); }
+  .status { background: linear-gradient(#08275d,#06143e); }
+  .op-green { background: linear-gradient(#167413,#045000); }
+  .op-teal { background: linear-gradient(#13818a,#00616a); }
+  .level-purple { background: linear-gradient(#642096,#3e006f); }
+  .attrib { background: linear-gradient(#777,#535353); }
+  .unknown { background: linear-gradient(#858585,#626262); }
+  .legend { height: 205px; padding: 18px 34px 10px; display: grid; grid-template-columns: 1fr 1fr 1.05fr; column-gap: 30px; border-top: 2px solid #c5d2df; }
+  .legend-col { font-size: 18px; }
+  .legend-title { color: #1f31c2; font-size: 21px; font-weight: 700; margin-bottom: 12px; }
+  .legend-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 22px; margin-bottom: 14px; }
+  .item { display: inline-flex; align-items: center; gap: 9px; white-space: nowrap; }
+  .sw { width: 24px; height: 24px; border-radius: 5px; }
+  .s1 { background:#0e7c86; } .s2{background:#c50e0e;} .s3{background:#d89a00;} .s4{background:#07580b;} .s5{background:#531086;} .s6{background:#666;}
+  .l1{background:#0b3d7a;} .l2{background:#ff4b10;} .l3{background:#6a219a;} .l4{background:#288014;}
+  .a1{background:#0d3a7b;} .a2{background:#ff4915;} .a3{background:#737373;}
+  .note { border: 2px solid #2b56ae; border-radius: 12px; padding: 13px 16px; font-size: 18px; line-height: 1.35; background:#fff; margin-top: 34px; }
+  .nav { height: 64px; background: linear-gradient(90deg,#4e92bc,#1d5f91); color:#fff; display:flex; align-items:center; justify-content:center; gap: 70px; font-size: 20px; }
+  .nav .active { color:#1828c7; background:#fff; padding: 10px 22px; border-radius: 10px; font-weight:700; }
+  .sources { height: 133px; display:grid; grid-template-columns: 1.6fr 1fr; gap:28px; padding: 16px 28px 10px; border-top: 1px solid #cbd7e3; }
+  .caption { font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-style: italic; color:#264999; line-height:1.45; }
+  .sourcebox { font-size: 17px; color:#264999; line-height:1.35; }
+  .sourcebox strong { display:block; margin-bottom:5px; }
+  .sourcebox ul { margin: 0; padding-left: 22px; }
+</style>
+</head>
+<body>
+<div class="figure">
+  <div class="hero">
+    <h1>The verse-locus workbench</h1>
+    <p>A synoptic, verse-level alignment of source traditions and vernacular mediations</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="left">TAFSĪR BEYOND ARABIC</div>
+    <div class="selector"><span class="tag">LOCUS</span><div class="box">Q 3:7 &nbsp;&nbsp;–&nbsp;&nbsp; question: the meaning of <em>zaygh</em></div></div>
+    <div class="right">5 TEXTUAL POSITIONS ALIGNED</div>
+  </div>
+
+  <div class="cards">
+    <section class="card">
+      <div class="card-head">
+        <div class="title">1. Qur’anic anchor</div>
+        <div class="sub">Cairo edition, 1924</div>
+      </div>
+      <div class="card-body">
+        <div class="qref">Q 3:7</div>
+        <div class="arabic quran">فأما الذين في قلوبهم <span class="hilite">زيغ</span></div>
+        <div class="translation">“As for those in whose hearts is deviation …”</div>
+        <div class="badges"><div class="badge status">anchor: every witness keyed to it</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="title">2. Arabic source gloss</div>
+        <div class="sub"><em>Tafsīr al-Jalālayn</em> (15th c.)</div>
+      </div>
+      <div class="card-body">
+        <div class="arabic arabic-key">زيغ</div>
+        <div class="arabic arabic-gloss">ميل عن الحق</div>
+        <div class="translit">zaygh: mayl ʿan al-ḥaqq</div>
+        <div class="translation">“an inclination away from the truth”</div>
+        <div class="badges"><div class="badge status">status: Arabic source gloss</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="title">3. Old Kanembu – <em>Tarjumo</em></div>
+        <div class="sub">Yerima Mustafa Qur’an (SOAS, MS.1YM)<br>Borno, late 17th–early 18th c.</div>
+      </div>
+      <div class="card-body">
+        <div class="kanembu">kagərgəjādīgin<br>jīre-kan mīltərəgəyi kəsigənī</div>
+        <div class="translation">“those in whose hearts there is deviation from truth”</div>
+        <div class="badges">
+          <div class="badge op-green">operation: incorporation / interpretative expansion</div>
+          <div class="badge level-purple">level: sentential–interpretative</div>
+          <div class="badge attrib">attribution: silent absorption</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="title">4. Wolofal – diachronic control</div>
+        <div class="sub">Muḥammad Dem tradition<br>EAP334/6/5, image 80 · post-1914</div>
+      </div>
+      <div class="card-body">
+        <div class="wolof">jeng wëlis dëg</div>
+        <div class="translation">“to incline in a direction other than the truth”</div>
+        <div class="badges">
+          <div class="badge op-teal">operation: close paraphrase / interpretation</div>
+          <div class="badge level-purple">level: lexical–interpretative</div>
+          <div class="badge attrib">attribution: silent absorption</div>
+          <div class="badge status">status: post-1914 diachronic control</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="title">5. Senegambian witnesses</div>
+        <div class="sub">1750–1914<br>to be established</div>
+      </div>
+      <div class="card-body">
+        <div class="placeholder">witnesses to be established through the source audit</div>
+        <div class="badges">
+          <div class="badge unknown">operation: &nbsp;?</div>
+          <div class="badge unknown">level: &nbsp;?</div>
+          <div class="badge unknown">attribution: &nbsp;?</div>
+          <div class="badge status">status: historical corpus to be established</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="legend">
+    <div class="legend-col">
+      <div class="legend-title">OPERATION ON THE SOURCE GLOSS</div>
+      <div class="legend-row">
+        <span class="item"><span class="sw s1"></span>selection</span>
+        <span class="item"><span class="sw s2"></span>omission</span>
+        <span class="item"><span class="sw s3"></span>condensation</span>
+        <span class="item"><span class="sw s4"></span>expansion / incorporation</span>
+        <span class="item"><span class="sw s5"></span>doctrinal filtering</span>
+        <span class="item"><span class="sw s6"></span>other / mixed</span>
+      </div>
+    </div>
+    <div class="legend-col">
+      <div class="legend-title">EXPLANATORY LEVEL</div>
+      <div class="legend-row">
+        <span class="item"><span class="sw l1"></span>morphosyntactic</span>
+        <span class="item"><span class="sw l2"></span>lexical / segmental</span>
+        <span class="item"><span class="sw l3"></span>sentential / phrasal</span>
+        <span class="item"><span class="sw l4"></span>interpretative</span>
+      </div>
+      <div class="legend-title">ATTRIBUTION REGIME</div>
+      <div class="legend-row">
+        <span class="item"><span class="sw a1"></span>named authority</span>
+        <span class="item"><span class="sw a2"></span>the commentators (meta-tafsīr)</span>
+        <span class="item"><span class="sw a3"></span>silent absorption</span>
+      </div>
+    </div>
+    <div class="legend-col">
+      <div class="note">Attribution is interpreted alongside material, linguistic and historical evidence; it does not by itself determine audience or function.</div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <span>‹ Prev.</span><span>Q 2:255</span><span>Q 2:262</span><span>Q 3:6</span><span class="active">Q 3:7</span><span>Q 3:8</span><span>Q 3:190</span><span>+ entry in TabA’s database of exegetical opinions</span>
+  </div>
+
+  <div class="sources">
+    <div class="caption"><strong>Figure 1.</strong>Conceptual mock-up of the verse-locus workbench, inspired by Versioning Machine 5 (http://v-machine.org/), the framework on which Coran 12-21 was built. Each locus aligns the Qur’anic anchor, Arabic source traditions, documented vernacular mediations and witnesses identified through the Senegambian source audit. Analytical fields record transformation, explanatory level and attribution. Database categories partly inspired by Saeed 2019.</div>
+    <div class="sourcebox"><strong>Sources for the example locus Q 3:7:</strong>
+      <ul>
+        <li><em>Al-Jalālayn</em>, Q 3:7.</li>
+        <li>Old Kanembu: Bondarev 2013, 77–79 (SOAS, MS.1YM).</li>
+        <li>Wolofal: British Library, EAP334/6/5, image 80 (Q 3:7).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</body>
+</html>
